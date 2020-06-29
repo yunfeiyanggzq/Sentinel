@@ -44,4 +44,11 @@ public interface TokenService {
      * @return result of the token request
      */
     TokenResult requestParamToken(Long ruleId, int acquireCount, Collection<Object> params);
+
+
+    TokenResult acquireConcurrentToken(Long ruleId, int acquireCount,  boolean prioritized);
+
+    TokenResult releaseConcurrentToken(Long tokenId);
+
+    TokenResult keepConcurrentToken(Long tokenId);
 }
