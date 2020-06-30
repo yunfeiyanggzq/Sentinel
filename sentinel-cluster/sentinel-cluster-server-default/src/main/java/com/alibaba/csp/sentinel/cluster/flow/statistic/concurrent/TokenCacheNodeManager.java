@@ -13,8 +13,8 @@ public class TokenCacheNodeManager {
     private final int DEFAULT_CONCURRENCY_LEVEL = 16;
     private final int DEFAULT_CAPACITY = Integer.MAX_VALUE;
     private final long DEFAULT_EXECUTE_COUNT = 1000;
-    private final long DEFAULT_EXECUTE_DURATION = 1000 * 2;
-    private final long DEFAULT_EXECUTE_RATE = 1000 * 10;
+    private final long DEFAULT_EXECUTE_DURATION = 600;
+    private final long DEFAULT_EXECUTE_RATE = 1000;
 
     public void prepare(int concurrencyLevel, int maximumWeightedCapacity, ExpireStrategy expireStrategy) {
         AssertUtil.isTrue(concurrencyLevel > 0, "concurrencyLevel must be positive");
@@ -44,7 +44,7 @@ public class TokenCacheNodeManager {
         TOKEN_CACHE_NODE_MAP.put(tokenId, cacheNode);
     }
 
-    public Boolean isContainsTokenId(long tokenId){
+    public Boolean isContainsTokenId(long tokenId) {
         return TOKEN_CACHE_NODE_MAP.containsKey(tokenId);
     }
 
@@ -56,4 +56,7 @@ public class TokenCacheNodeManager {
         return TOKEN_CACHE_NODE_MAP.size();
     }
 
+    public ConcurrentLinkedHashMap<Long, TokenCacheNode> getCache(){
+        return this.TOKEN_CACHE_NODE_MAP;
+    }
 }

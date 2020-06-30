@@ -28,7 +28,7 @@ public class TokenCacheNode {
     /**
      * the number this token occupied
      */
-    private int aquireCount;
+    private int acquireCount;
 
     TokenCacheNode() {
     }
@@ -38,9 +38,9 @@ public class TokenCacheNode {
         long tokenId = UUID.randomUUID().getMostSignificantBits();
         node.setTokenId(tokenId);
         node.setFlowId(rule.getFlowId());
-        node.setClientTimeout(rule.getSourceTimeout());
+        node.setClientTimeout(rule.getClientTimeout());
         node.getSourceTimeout(rule.getSourceTimeout());
-        node.setAquireCount(acquireCount);
+        node.setAcquireCount(acquireCount);
         return node;
     }
 
@@ -76,12 +76,12 @@ public class TokenCacheNode {
         this.flowId = flowId;
     }
 
-    public int getAquireCount() {
-        return aquireCount;
+    public int getAcquireCount() {
+        return acquireCount;
     }
 
-    public void setAquireCount(int aquireCount) {
-        this.aquireCount = aquireCount;
+    public void setAcquireCount(int aquireCount) {
+        this.acquireCount = aquireCount;
     }
 
     @Override
@@ -91,7 +91,7 @@ public class TokenCacheNode {
                 ", clientTimeout=" + clientTimeout +
                 ", sourceTimeout=" + sourceTimeout +
                 ", flowId=" + flowId +
-                ", aquireCount=" + aquireCount +
+                ", aquireCount=" + acquireCount +
                 '}';
     }
 }

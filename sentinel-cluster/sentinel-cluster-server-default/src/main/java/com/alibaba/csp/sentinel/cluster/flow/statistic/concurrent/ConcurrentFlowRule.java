@@ -5,6 +5,8 @@ import com.alibaba.csp.sentinel.node.DefaultNode;
 import com.alibaba.csp.sentinel.slots.block.AbstractRule;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class ConcurrentFlowRule extends AbstractRule {
 
     public ConcurrentFlowRule() {
@@ -29,6 +31,26 @@ public class ConcurrentFlowRule extends AbstractRule {
 
     // client call resource overtime detection time
     private long sourceTimeout;
+
+    private int expireCount=0;
+
+    private AtomicInteger releaseCount=new AtomicInteger(0);
+
+    public AtomicInteger getReleaseCount() {
+        return releaseCount;
+    }
+
+    public void addReleaseCount(Integer releaseCount) {
+        this.releaseCount.getAndAdd(releaseCount);
+    }
+
+    public int getExpireCount() {
+        return expireCount;
+    }
+
+    public void addExpireCount(Integer expireCount) {
+        this.expireCount = this.expireCount+expireCount;
+    }
 
     public long getFlowId() {
         return flowId;
@@ -60,6 +82,18 @@ public class ConcurrentFlowRule extends AbstractRule {
 
     public void setSourceTimeout(long sourceTimeout) {
         this.sourceTimeout = sourceTimeout;
+    }
+
+    @Override
+    public String toString() {
+        return "ConcurrentFlowRule{" +
+                "flowId=" + flowId +
+                ", concurrencyLevel=" + concurrencyLevel +
+                ", clientTimeout=" + clientTimeout +
+                ", sourceTimeout=" + sourceTimeout +
+                ", expireCount=" + expireCount +
+                ", releaseCount=" + releaseCount +
+                '}';
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent;
 
+import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterConcurrentFlowRuleManager;
 import com.alibaba.csp.sentinel.util.AssertUtil;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 
@@ -52,17 +54,19 @@ public class RegularExpireStrategy implements ExpireStrategy {
                 // use ConcurrentLinkedHashMap to improve the expiration detection progress
                 Long key = (Long) keyList.get(i);
                 TokenCacheNode node = localCache.get(key);
-//                System.out.println(key+"|"+localCache.size()+"|"+node.toString());
                 // If  we find that token's save time is much longer than the client's
                 // call resource timeout time, token will be determined to timeout and the client go wrong
                 if (node != null && node.getClientTimeout() - System.currentTimeMillis() < 0) {
                     //  communicate with the client to confirm disconnection
                     if (isClientShoutDown()) {
                         // find the corresponding FlowRule to sync nowCalls
-                        if (NowCallsManager.update(node.getFlowId(), node.getAquireCount())) {
-                            // remove the token
-                            localCache.remove(key);
+                        // remove the token
+                        if (localCache.remove(key) == null) {
+                            return;
                         }
+                        AtomicInteger nowCalls = NowCallsManager.get(node.getFlowId());
+                        nowCalls.getAndAdd((int) node.getAcquireCount() * -1);
+                        ClusterConcurrentFlowRuleManager.getFlowRule(node.getFlowId()).addExpireCount(node.getAcquireCount());
                     }
                 }
                 // time out execution exit
@@ -71,6 +75,7 @@ public class RegularExpireStrategy implements ExpireStrategy {
                 }
             }
         }
+
     }
 
     // TODO:implement this function
