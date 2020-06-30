@@ -89,6 +89,7 @@ public class TokenResult {
     public String toString() {
         return "TokenResult{" +
                 "status=" + status +
+                ", tokenId=" + tokenId +
                 ", remaining=" + remaining +
                 ", waitInMs=" + waitInMs +
                 ", attachments=" + attachments +

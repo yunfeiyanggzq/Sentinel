@@ -2,7 +2,6 @@ package com.alibaba.csp.sentinel.cluster.flow;
 
 import com.alibaba.csp.sentinel.cluster.TokenResult;
 import com.alibaba.csp.sentinel.cluster.TokenResultStatus;
-import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterConcurrentFlowRuleManager;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.ConcurrentFlowRule;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.NowCallsManager;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.TokenCacheNode;
@@ -19,27 +18,34 @@ public class ClusterConcurrentFLowChecker {
         if (nowCalls == null) {
             return new TokenResult(TokenResultStatus.FAIL);
         }
-        if (nowCalls.get() > rule.getConcurrencyLevel()) {
-            return new TokenResult(TokenResultStatus.BLOCKED);
+        synchronized (nowCalls) {
+            if (nowCalls.get() >= rule.getConcurrencyLevel()) {
+                System.out.println("*****************"+NowCallsManager.get(flowId));
+                return new TokenResult(TokenResultStatus.BLOCKED);
+            } else {
+                NowCallsManager.update(flowId, acquireCount);
+                System.out.println("-----------------"+NowCallsManager.get(flowId));
+            }
         }
+
         TokenCacheNode node = TokenCacheNode.generateTokenCacheNode(rule, acquireCount);
-        NowCallsManager.update(flowId, acquireCount);
-        tokenCacheNodeManager.putTokenCacheNode(flowId, node);
+        tokenCacheNodeManager.putTokenCacheNode(node.getTokenId(), node);
         TokenResult tokenResult = new TokenResult();
         tokenResult.setStatus(TokenResultStatus.OK);
         tokenResult.setTokenId(node.getTokenId());
         return tokenResult;
     }
 
-    public static void main(String[] args) {
-        ConcurrentFlowRule rule=new ConcurrentFlowRule();
-        rule.setClientTimeout(100L);
-        rule.setSourceTimeout(500L);
-        rule.setConcurrencyLevel(50);
-        rule.setFlowId(111L);
-        ClusterConcurrentFlowRuleManager.addFlowRule(111L,rule);
-        ClusterConcurrentFLowChecker.acquireClusterToken(rule,1,false);
-
-
+    static TokenResult releaseClusterToken(long tokenId)  {
+        TokenCacheNode node = tokenCacheNodeManager.getTokenCacheNode(tokenId);
+        if (node == null) {
+            return new TokenResult(TokenResultStatus.READY_REALSE);
+        }
+        long acquireCount = node.getAquireCount();
+        long flowId = node.getFlowId();
+        tokenCacheNodeManager.removeTokenCacheNode(tokenId);
+        NowCallsManager.update(flowId, (int) acquireCount * (-1));
+        System.out.println("+++++++++++++++++++++"+NowCallsManager.get(flowId)+"|"+tokenCacheNodeManager.getSize());
+        return new TokenResult(TokenResultStatus.READY_REALSE);
     }
 }

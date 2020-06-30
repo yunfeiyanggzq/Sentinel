@@ -16,7 +16,7 @@ public class TokenCacheNodeManager {
     private final long DEFAULT_EXECUTE_DURATION = 1000 * 2;
     private final long DEFAULT_EXECUTE_RATE = 1000 * 10;
 
-    public TokenCacheNodeManager(int concurrencyLevel, int maximumWeightedCapacity, ExpireStrategy expireStrategy) {
+    public void prepare(int concurrencyLevel, int maximumWeightedCapacity, ExpireStrategy expireStrategy) {
         AssertUtil.isTrue(concurrencyLevel > 0, "concurrencyLevel must be positive");
         AssertUtil.isTrue(maximumWeightedCapacity > 0, "maximumWeightedCapacity must be positive");
         AssertUtil.isTrue(expireStrategy != null, "expireStrategy can;t be null");
@@ -33,7 +33,7 @@ public class TokenCacheNodeManager {
 
     public TokenCacheNodeManager() {
         ExpireStrategy expireStrategy = new RegularExpireStrategy(DEFAULT_EXECUTE_COUNT, DEFAULT_EXECUTE_DURATION, DEFAULT_EXECUTE_RATE);
-        new TokenCacheNodeManager(DEFAULT_CONCURRENCY_LEVEL, DEFAULT_CAPACITY, expireStrategy);
+        prepare(DEFAULT_CONCURRENCY_LEVEL, DEFAULT_CAPACITY, expireStrategy);
     }
 
     public TokenCacheNode getTokenCacheNode(long tokenId) {
@@ -42,6 +42,10 @@ public class TokenCacheNodeManager {
 
     public void putTokenCacheNode(long tokenId, TokenCacheNode cacheNode) {
         TOKEN_CACHE_NODE_MAP.put(tokenId, cacheNode);
+    }
+
+    public Boolean isContainsTokenId(long tokenId){
+        return TOKEN_CACHE_NODE_MAP.containsKey(tokenId);
     }
 
     public TokenCacheNode removeTokenCacheNode(long tokenId) {

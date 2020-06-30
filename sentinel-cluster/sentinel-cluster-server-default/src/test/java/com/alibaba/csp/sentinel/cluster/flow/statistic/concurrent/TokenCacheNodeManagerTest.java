@@ -15,7 +15,7 @@ public class TokenCacheNodeManagerTest {
     @Before
     public void prepare() {
         RegularExpireStrategy regularExpireStrategy = new RegularExpireStrategy(1000L, 1000L, 1500L);
-        this.localCache = new TokenCacheNodeManager(4, Integer.MAX_VALUE, regularExpireStrategy);
+        this.localCache = new TokenCacheNodeManager();
     }
 
     @Test
@@ -42,6 +42,7 @@ public class TokenCacheNodeManagerTest {
             pool.execute(task);
         }
         countDownLatch.await();
+
         Thread.sleep(10*1000L);
         Assert.assertEquals(0, localCache.getSize());
 

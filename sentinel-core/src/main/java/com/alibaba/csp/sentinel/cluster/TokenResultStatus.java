@@ -60,5 +60,8 @@ public final class TokenResultStatus {
      */
     public static final int NOT_AVAILABLE = 5;
 
-    private TokenResultStatus() {}
+    public static final int READY_REALSE = 6;
+
+    private TokenResultStatus() {
+    }
 }

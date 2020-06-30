@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Each request to obtain a token will increase the nowCalls; and the request to release the token
  * will reduce the nowCalls.
  */
-public class NowCallsManager {
+public final class NowCallsManager {
     /**
      * use ConcurrentHashMap to store the nowCalls of rules.
      */
@@ -22,6 +22,7 @@ public class NowCallsManager {
      * update the nowCalls.
      */
     public static Boolean update(Long flowId, Integer count) {
+
         AtomicInteger nowCalls = NOW_CALLS_MAP.get(flowId);
         if (nowCalls == null) {
             return false;
