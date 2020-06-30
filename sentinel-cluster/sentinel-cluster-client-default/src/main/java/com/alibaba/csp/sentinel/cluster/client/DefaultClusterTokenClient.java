@@ -182,6 +182,21 @@ public class DefaultClusterTokenClient implements ClusterTokenClient {
         }
     }
 
+    @Override
+    public TokenResult acquireConcurrentToken(Long ruleId, int acquireCount, boolean prioritized) {
+        return null;
+    }
+
+    @Override
+    public TokenResult releaseConcurrentToken(Long tokenId) {
+        return null;
+    }
+
+    @Override
+    public TokenResult keepConcurrentToken(Long tokenId) {
+        return null;
+    }
+
     private void logForResult(TokenResult result) {
         switch (result.getStatus()) {
             case TokenResultStatus.NO_RULE_EXISTS:

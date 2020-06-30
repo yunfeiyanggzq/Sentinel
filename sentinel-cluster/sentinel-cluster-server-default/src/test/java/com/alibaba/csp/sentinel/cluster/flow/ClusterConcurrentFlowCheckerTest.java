@@ -5,9 +5,9 @@ import com.alibaba.csp.sentinel.cluster.TokenResultStatus;
 import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterConcurrentFlowRuleManager;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.ConcurrentFlowRule;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.NowCallsManager;
+import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -15,10 +15,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClusterConcurrentFlowCheckerTest {
     @Test
-    public void testAcquire() throws InterruptedException {
+    public void testAcquireAndRealse() throws InterruptedException {
         final ConcurrentFlowRule rule = new ConcurrentFlowRule();
-        rule.setClientTimeout(5000L);
-        rule.setSourceTimeout(1000L);
+        rule.setClientTimeout(500L);
+        rule.setSourceTimeout(100L);
         rule.setConcurrencyLevel(3000);
         rule.setFlowId(111L);
         ClusterConcurrentFlowRuleManager.addFlowRule(111L, rule);
@@ -35,7 +35,7 @@ public class ClusterConcurrentFlowCheckerTest {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    TokenResult tokenResult = ClusterConcurrentFLowChecker.acquireClusterToken(rule, 1, false);
+                    TokenResult tokenResult = ClusterConcurrentFlowChecker.acquireClusterToken(rule, 1, false);
                     if (tokenResult.getStatus() == TokenResultStatus.BLOCKED) {
                         countDownLatch.countDown();
                         return;
@@ -46,19 +46,18 @@ public class ClusterConcurrentFlowCheckerTest {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-
-                    ClusterConcurrentFLowChecker.releaseClusterToken(tokenResult.getTokenId());
+                    ClusterConcurrentFlowChecker.releaseClusterToken(tokenResult.getTokenId());
                     countDownLatch.countDown();
                 }
             };
             pool.execute(task);
         }
         countDownLatch.await();
-//        System.out.println("添加完成");
-        Thread.sleep(10 * 1000);
-//        System.out.println(sum.get() + "通过");
-//        System.out.println(rule.toString().toString() + "规则情况");
-//        System.out.println(ClusterConcurrentFLowChecker.getSize() + "缓存大小");
-//        System.out.println(NowCallsManager.get(111L) + "|nowCalls");
+        while ((NowCallsManager.get(111L).get() != 0)) {
+            Thread.sleep(100);
+        }
+        Assert.assertEquals(0, ClusterConcurrentFlowChecker.getSize());
+        Assert.assertEquals("token pass must be the sum of expired token and released token",
+                rule.getReleaseCount().get() + rule.getExpireCount(), sum.get());
     }
 }

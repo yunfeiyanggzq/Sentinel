@@ -74,7 +74,7 @@ public class DefaultTokenService implements TokenService {
             return new TokenResult(TokenResultStatus.NO_RULE_EXISTS);
         }
 
-        return ClusterConcurrentFLowChecker.acquireClusterToken(rule, acquireCount, prioritized);
+        return ClusterConcurrentFlowChecker.acquireClusterToken(rule, acquireCount, prioritized);
     }
 
     @Override

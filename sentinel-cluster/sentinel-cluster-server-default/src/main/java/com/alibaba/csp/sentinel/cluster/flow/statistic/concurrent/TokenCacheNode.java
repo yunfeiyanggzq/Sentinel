@@ -7,6 +7,7 @@ import java.util.UUID;
  * is ConcurrentLinkedHashMap, Its structure is shown in the following figure.
  * Its storage node is CacheNode. In order to operate the nowCalls value when
  * the expired tokenId is deleted regularly, we need to store the flowId in CacheNode.
+ * @author yunfeiyanggzq
  */
 public class TokenCacheNode {
     /**
@@ -91,7 +92,7 @@ public class TokenCacheNode {
                 ", clientTimeout=" + clientTimeout +
                 ", sourceTimeout=" + sourceTimeout +
                 ", flowId=" + flowId +
-                ", aquireCount=" + acquireCount +
+                ", acquireCount=" + acquireCount +
                 '}';
     }
 }

@@ -10,14 +10,16 @@ import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.TokenCacheNode
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ClusterConcurrentFLowChecker {
+/**
+ * @author yunfeiyanggzq
+ */
+public final class ClusterConcurrentFlowChecker {
     private static TokenCacheNodeManager tokenCacheNodeManager = new TokenCacheNodeManager();
 
     public static TokenResult acquireClusterToken(/*@Valid*/ ConcurrentFlowRule rule, int acquireCount, boolean prioritized) {
 
         Long flowId = rule.getFlowId();
         AtomicInteger nowCalls = NowCallsManager.get(flowId);
-        System.out.println(nowCalls.get());
         if (nowCalls == null) {
             return new TokenResult(TokenResultStatus.FAIL);
         }
@@ -36,6 +38,7 @@ public class ClusterConcurrentFLowChecker {
         return tokenResult;
     }
 
+    // TODO: do with the returen tokenResult.
     public static TokenResult releaseClusterToken(long tokenId) {
         TokenCacheNode node = tokenCacheNodeManager.getTokenCacheNode(tokenId);
         if (node == null) {

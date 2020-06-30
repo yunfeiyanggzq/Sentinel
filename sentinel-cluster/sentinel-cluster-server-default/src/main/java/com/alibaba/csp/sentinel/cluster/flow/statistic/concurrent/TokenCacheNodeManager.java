@@ -1,5 +1,7 @@
 package com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent;
 
+import com.alibaba.csp.sentinel.cluster.flow.statistic.expire.ExpireStrategy;
+import com.alibaba.csp.sentinel.cluster.flow.statistic.expire.RegularExpireStrategy;
 import com.alibaba.csp.sentinel.util.AssertUtil;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.googlecode.concurrentlinkedhashmap.Weighers;

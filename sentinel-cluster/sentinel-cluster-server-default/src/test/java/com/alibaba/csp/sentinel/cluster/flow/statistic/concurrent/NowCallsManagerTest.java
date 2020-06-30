@@ -25,7 +25,7 @@ public class NowCallsManagerTest {
             pool.execute(task);
         }
         countDownLatch.await();
-        assertTrue(NowCallsManager.get(111L).equals(1000));
-        assertTrue(NowCallsManager.get(222L).equals(2000));
+        assertEquals(1000, NowCallsManager.get(111L).get());
+        assertEquals(2000, NowCallsManager.get(222L).get());
     }
 }

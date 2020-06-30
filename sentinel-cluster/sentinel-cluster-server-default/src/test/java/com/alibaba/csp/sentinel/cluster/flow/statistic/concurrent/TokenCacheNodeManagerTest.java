@@ -1,6 +1,7 @@
 package com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent;
 
 import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterConcurrentFlowRuleManager;
+import com.alibaba.csp.sentinel.cluster.flow.statistic.expire.RegularExpireStrategy;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,18 +21,18 @@ public class TokenCacheNodeManagerTest {
 
     @Test
     public void testPutTokenCacheNode() throws InterruptedException {
-        ConcurrentFlowRule rule=new ConcurrentFlowRule();
-        rule.setClientTimeout(100L);
-        rule.setSourceTimeout(500L);
+        ConcurrentFlowRule rule = new ConcurrentFlowRule();
+        rule.setClientTimeout(10000L);
+        rule.setSourceTimeout(50000L);
         rule.setConcurrencyLevel(50);
         rule.setFlowId(111L);
-        ClusterConcurrentFlowRuleManager.addFlowRule(111L,rule);
+        ClusterConcurrentFlowRuleManager.addFlowRule(111L, rule);
 
         final CountDownLatch countDownLatch = new CountDownLatch(5000);
         ExecutorService pool = Executors.newFixedThreadPool(100);
 
         for (long i = 0; i < 5000; i++) {
-            final TokenCacheNode node=TokenCacheNode.generateTokenCacheNode(rule,1);
+            final TokenCacheNode node = TokenCacheNode.generateTokenCacheNode(rule, 1);
             Runnable task = new Runnable() {
                 @Override
                 public void run() {
@@ -42,9 +43,6 @@ public class TokenCacheNodeManagerTest {
             pool.execute(task);
         }
         countDownLatch.await();
-
-        Thread.sleep(10*1000L);
-        Assert.assertEquals(0, localCache.getSize());
-
+        Assert.assertEquals(5000, localCache.getSize());
     }
 }

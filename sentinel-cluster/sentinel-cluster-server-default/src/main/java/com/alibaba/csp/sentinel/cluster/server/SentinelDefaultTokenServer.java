@@ -86,6 +86,7 @@ public class SentinelDefaultTokenServer implements ClusterTokenServer {
             }
             this.server = new NettyTransportServer(newPort);
             this.port = newPort;
+            System.out.println(this.port+"端口");
             startServerIfScheduled();
         } catch (Exception ex) {
             RecordLog.warn("[SentinelDefaultTokenServer] Failed to apply modification to token server", ex);
@@ -149,5 +150,11 @@ public class SentinelDefaultTokenServer implements ClusterTokenServer {
         if (shouldStart.compareAndSet(true, false)) {
             stopServer();
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+        SentinelDefaultTokenServer server=new SentinelDefaultTokenServer();
+
+        server.start();
     }
 }

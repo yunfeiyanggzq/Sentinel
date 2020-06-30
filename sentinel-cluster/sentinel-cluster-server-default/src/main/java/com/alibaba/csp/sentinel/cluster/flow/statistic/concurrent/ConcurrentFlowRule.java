@@ -7,6 +7,9 @@ import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * @author yunfeiyanggzq
+ */
 public class ConcurrentFlowRule extends AbstractRule {
 
     public ConcurrentFlowRule() {
