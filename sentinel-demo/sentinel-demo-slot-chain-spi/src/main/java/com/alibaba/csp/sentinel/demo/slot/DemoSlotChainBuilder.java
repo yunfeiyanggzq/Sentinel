@@ -25,12 +25,12 @@ import com.alibaba.csp.sentinel.slots.DefaultSlotChainBuilder;
  *
  * @author Eric Zhao
  */
-public class DemoSlotChainBuilder implements SlotChainBuilder {
+public class DemoSlotChainBuilder extends  DefaultSlotChainBuilder {
 
-    @Override
-    public ProcessorSlotChain build() {
-        ProcessorSlotChain chain = new DefaultSlotChainBuilder().build();
-        chain.addLast(new DemoSlot());
-        return chain;
-    }
+//    @Override
+//    public ProcessorSlotChain build() {
+//        ProcessorSlotChain chain = new DefaultSlotChainBuilder().build();
+//        chain.addLast(new DemoSlot());
+//        return chain;
+//    }
 }

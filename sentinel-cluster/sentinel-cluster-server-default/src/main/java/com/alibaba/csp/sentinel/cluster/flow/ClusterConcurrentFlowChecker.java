@@ -2,7 +2,7 @@ package com.alibaba.csp.sentinel.cluster.flow;
 
 import com.alibaba.csp.sentinel.cluster.TokenResult;
 import com.alibaba.csp.sentinel.cluster.TokenResultStatus;
-import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterConcurrentFlowRuleManager;
+import com.alibaba.csp.sentinel.cluster.flow.rule.ConcurrentFlowRuleManager;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.ConcurrentFlowRule;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.NowCallsManager;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.TokenCacheNode;
@@ -38,20 +38,38 @@ public final class ClusterConcurrentFlowChecker {
         return tokenResult;
     }
 
-    // TODO: do with the returen tokenResult.
     public static TokenResult releaseClusterToken(long tokenId) {
+        // TODO: do with the return tokenResult.
         TokenCacheNode node = tokenCacheNodeManager.getTokenCacheNode(tokenId);
         if (node == null) {
             return new TokenResult(TokenResultStatus.READY_REALSE);
         }
+        ConcurrentFlowRule rule = ConcurrentFlowRuleManager.getFlowRule(node.getFlowId());
+        if (rule == null) {
+            return new TokenResult(TokenResultStatus.NO_RULE_EXISTS);
+        }
+
         if (tokenCacheNodeManager.removeTokenCacheNode(tokenId) == null) {
             return new TokenResult(TokenResultStatus.READY_REALSE);
         }
         int acquireCount = node.getAcquireCount();
         AtomicInteger nowCalls = NowCallsManager.get(node.getFlowId());
         nowCalls.getAndAdd(acquireCount * -1);
-        ClusterConcurrentFlowRuleManager.getFlowRule(node.getFlowId()).addReleaseCount(node.getAcquireCount());
+        rule.addReleaseCount(node.getAcquireCount());
         return new TokenResult(TokenResultStatus.READY_REALSE);
+    }
+
+    public static TokenResult keepClusterToken(long tokenId) {
+        TokenCacheNode node = tokenCacheNodeManager.getTokenCacheNode(tokenId);
+        if (node == null) {
+            return new TokenResult(TokenResultStatus.READY_REALSE);
+        }
+        ConcurrentFlowRule rule = ConcurrentFlowRuleManager.getFlowRule(node.getFlowId());
+        if (rule == null) {
+            return new TokenResult(TokenResultStatus.NO_RULE_EXISTS);
+        }
+        node.setSourceTimeout(rule.getSourceTimeout());
+        return new TokenResult(TokenResultStatus.READY_KEEP);
     }
 
     public static int getSize() {

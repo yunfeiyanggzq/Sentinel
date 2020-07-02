@@ -151,10 +151,4 @@ public class SentinelDefaultTokenServer implements ClusterTokenServer {
             stopServer();
         }
     }
-
-    public static void main(String[] args) throws Exception {
-        SentinelDefaultTokenServer server=new SentinelDefaultTokenServer();
-
-        server.start();
-    }
 }

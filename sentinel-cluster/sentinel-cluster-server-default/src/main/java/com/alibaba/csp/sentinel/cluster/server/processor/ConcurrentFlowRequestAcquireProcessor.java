@@ -17,6 +17,7 @@ import com.alibaba.csp.sentinel.cluster.server.TokenServiceProvider;
 public class ConcurrentFlowRequestAcquireProcessor implements RequestProcessor<ConcurrentFlowAcquireRequestData, ConcurrentFlowTokenResponseData> {
     @Override
     public ClusterResponse processRequest(ClusterRequest<ConcurrentFlowAcquireRequestData> request) {
+        System.out.println("并发集群流控请求来了");
         TokenService tokenService = TokenServiceProvider.getService();
         long flowId = request.getData().getFlowId();
         int count = request.getData().getCount();

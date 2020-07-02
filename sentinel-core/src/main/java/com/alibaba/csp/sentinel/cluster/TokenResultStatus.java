@@ -62,6 +62,8 @@ public final class TokenResultStatus {
 
     public static final int READY_REALSE = 6;
 
+    public static final int READY_KEEP = 7;
+
     private TokenResultStatus() {
     }
 }

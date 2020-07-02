@@ -34,10 +34,8 @@ public class FlowRequestProcessor implements RequestProcessor<FlowRequestData, F
 
     @Override
     public ClusterResponse<FlowTokenResponseData> processRequest(ClusterRequest<FlowRequestData> request) {
-        System.out.println("服务");
         TokenService tokenService = TokenServiceProvider.getService();
         long flowId = request.getData().getFlowId();
-        System.out.println(flowId+"进来了");
         int count = request.getData().getCount();
         boolean prioritized = request.getData().isPriority();
 

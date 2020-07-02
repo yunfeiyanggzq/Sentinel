@@ -20,7 +20,7 @@ import java.util.Collection;
 import com.alibaba.csp.sentinel.cluster.TokenResultStatus;
 import com.alibaba.csp.sentinel.cluster.TokenResult;
 import com.alibaba.csp.sentinel.cluster.TokenService;
-import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterConcurrentFlowRuleManager;
+import com.alibaba.csp.sentinel.cluster.flow.rule.ConcurrentFlowRuleManager;
 import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterFlowRuleManager;
 import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterParamFlowRuleManager;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.ConcurrentFlowRule;
@@ -69,7 +69,7 @@ public class DefaultTokenService implements TokenService {
             return badRequest();
         }
         // The rule should be valid.
-        ConcurrentFlowRule rule = ClusterConcurrentFlowRuleManager.getFlowRule(ruleId);
+        ConcurrentFlowRule rule = ConcurrentFlowRuleManager.getFlowRule(ruleId);
         if (rule == null) {
             return new TokenResult(TokenResultStatus.NO_RULE_EXISTS);
         }

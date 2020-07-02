@@ -4,6 +4,7 @@ import com.alibaba.csp.sentinel.context.Context;
 import com.alibaba.csp.sentinel.node.DefaultNode;
 import com.alibaba.csp.sentinel.slots.block.AbstractRule;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
+import com.alibaba.csp.sentinel.slots.block.flow.ClusterFlowConfig;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -37,7 +38,30 @@ public class ConcurrentFlowRule extends AbstractRule {
 
     private int expireCount=0;
 
+    private boolean clusterMode;
+    /**
+     * Flow rule config for cluster mode.
+     */
+    private ClusterFlowConfig clusterConfig;
+
     private AtomicInteger releaseCount=new AtomicInteger(0);
+
+
+    public boolean isClusterMode() {
+        return clusterMode;
+    }
+
+    public void setClusterMode(boolean clusterMode) {
+        this.clusterMode = clusterMode;
+    }
+
+    public ClusterFlowConfig getClusterConfig() {
+        return clusterConfig;
+    }
+
+    public void setClusterConfig(ClusterFlowConfig clusterConfig) {
+        this.clusterConfig = clusterConfig;
+    }
 
     public AtomicInteger getReleaseCount() {
         return releaseCount;

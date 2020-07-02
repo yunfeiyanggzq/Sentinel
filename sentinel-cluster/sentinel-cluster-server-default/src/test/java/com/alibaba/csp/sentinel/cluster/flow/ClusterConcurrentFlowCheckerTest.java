@@ -2,10 +2,11 @@ package com.alibaba.csp.sentinel.cluster.flow;
 
 import com.alibaba.csp.sentinel.cluster.TokenResult;
 import com.alibaba.csp.sentinel.cluster.TokenResultStatus;
-import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterConcurrentFlowRuleManager;
+import com.alibaba.csp.sentinel.cluster.flow.rule.ConcurrentFlowRuleManager;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.ConcurrentFlowRule;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.NowCallsManager;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.CountDownLatch;
@@ -14,18 +15,23 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClusterConcurrentFlowCheckerTest {
-    @Test
-    public void testAcquireAndRealse() throws InterruptedException {
-        final ConcurrentFlowRule rule = new ConcurrentFlowRule();
+    ConcurrentFlowRule rule = null;
+
+    @Before
+    public void prepare() {
+        rule = new ConcurrentFlowRule();
         rule.setClientTimeout(500L);
         rule.setSourceTimeout(100L);
         rule.setConcurrencyLevel(3000);
         rule.setFlowId(111L);
-        ClusterConcurrentFlowRuleManager.addFlowRule(111L, rule);
+        ConcurrentFlowRuleManager.addFlowRule(111L, rule);
+    }
+
+    @Test
+    public void testAcquireAndRelease() throws InterruptedException {
         final CountDownLatch countDownLatch = new CountDownLatch(100000);
         ExecutorService pool = Executors.newFixedThreadPool(10000);
         final AtomicInteger sum = new AtomicInteger(0);
-
         for (long i = 0; i < 100000; i++) {
             Runnable task = new Runnable() {
                 @Override
@@ -59,5 +65,11 @@ public class ClusterConcurrentFlowCheckerTest {
         Assert.assertEquals(0, ClusterConcurrentFlowChecker.getSize());
         Assert.assertEquals("token pass must be the sum of expired token and released token",
                 rule.getReleaseCount().get() + rule.getExpireCount(), sum.get());
+    }
+
+    @Test
+    public void testKeepToken() {
+        TokenResult tokenResult = ClusterConcurrentFlowChecker.acquireClusterToken(rule, 1, false);
+        ClusterConcurrentFlowChecker.keepClusterToken(tokenResult.getTokenId());
     }
 }

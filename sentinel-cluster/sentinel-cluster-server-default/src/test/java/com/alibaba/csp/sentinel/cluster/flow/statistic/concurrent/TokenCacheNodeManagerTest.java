@@ -1,6 +1,6 @@
 package com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent;
 
-import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterConcurrentFlowRuleManager;
+import com.alibaba.csp.sentinel.cluster.flow.rule.ConcurrentFlowRuleManager;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.expire.RegularExpireStrategy;
 import org.junit.Assert;
 import org.junit.Before;
@@ -26,7 +26,7 @@ public class TokenCacheNodeManagerTest {
         rule.setSourceTimeout(50000L);
         rule.setConcurrencyLevel(50);
         rule.setFlowId(111L);
-        ClusterConcurrentFlowRuleManager.addFlowRule(111L, rule);
+        ConcurrentFlowRuleManager.addFlowRule(111L, rule);
 
         final CountDownLatch countDownLatch = new CountDownLatch(5000);
         ExecutorService pool = Executors.newFixedThreadPool(100);
