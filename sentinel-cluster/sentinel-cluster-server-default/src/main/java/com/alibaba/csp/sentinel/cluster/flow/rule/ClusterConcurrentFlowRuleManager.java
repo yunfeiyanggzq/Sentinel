@@ -16,7 +16,6 @@
 package com.alibaba.csp.sentinel.cluster.flow.rule;
 
 import com.alibaba.csp.sentinel.cluster.flow.statistic.ClusterMetricStatistics;
-import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.ConcurrentFlowRule;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.metric.ClusterMetric;
 import com.alibaba.csp.sentinel.cluster.server.ServerConstants;
 import com.alibaba.csp.sentinel.cluster.server.connection.ConnectionManager;
@@ -28,6 +27,7 @@ import com.alibaba.csp.sentinel.property.SentinelProperty;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.block.flow.ClusterFlowConfig;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
+import com.alibaba.csp.sentinel.slots.block.flow.concurrent.ConcurrentFlowRule;
 import com.alibaba.csp.sentinel.util.AssertUtil;
 import com.alibaba.csp.sentinel.util.StringUtil;
 import com.alibaba.csp.sentinel.util.function.Function;
@@ -44,12 +44,12 @@ public final class ClusterConcurrentFlowRuleManager {
      * for a specific namespace to do rule management manually.
      */
     public static final Function<String, SentinelProperty<List<ConcurrentFlowRule>>> DEFAULT_PROPERTY_SUPPLIER =
-        new Function<String, SentinelProperty<List<ConcurrentFlowRule>>>() {
-            @Override
-            public SentinelProperty<List<ConcurrentFlowRule>> apply(String namespace) {
-                return new DynamicSentinelProperty<>();
-            }
-        };
+            new Function<String, SentinelProperty<List<ConcurrentFlowRule>>>() {
+                @Override
+                public SentinelProperty<List<ConcurrentFlowRule>> apply(String namespace) {
+                    return new DynamicSentinelProperty<>();
+                }
+            };
 
     /**
      * (flowId, clusterRule)
@@ -77,7 +77,7 @@ public final class ClusterConcurrentFlowRuleManager {
      * Cluster flow rule property supplier for a specific namespace.
      */
     private static volatile Function<String, SentinelProperty<List<ConcurrentFlowRule>>> propertySupplier
-        = DEFAULT_PROPERTY_SUPPLIER;
+            = DEFAULT_PROPERTY_SUPPLIER;
 
     private static final Object UPDATE_LOCK = new Object();
 
@@ -108,18 +108,18 @@ public final class ClusterConcurrentFlowRuleManager {
         AssertUtil.notEmpty(namespace, "namespace cannot be empty");
         if (propertySupplier == null) {
             RecordLog.warn(
-                "[ClusterConcurrentFlowRuleManager] Cluster flow property supplier is absent, cannot register property");
+                    "[ClusterConcurrentFlowRuleManager] Cluster flow property supplier is absent, cannot register property");
             return;
         }
         SentinelProperty<List<ConcurrentFlowRule>> property = propertySupplier.apply(namespace);
         if (property == null) {
             RecordLog.warn(
-                "[ClusterConcurrentFlowRuleManager] Wrong created property from cluster flow property supplier, ignoring");
+                    "[ClusterConcurrentFlowRuleManager] Wrong created property from cluster flow property supplier, ignoring");
             return;
         }
         synchronized (UPDATE_LOCK) {
             RecordLog.info("[ClusterConcurrentFlowRuleManager] Registering new property to cluster flow rule manager"
-                + " for namespace <{}>", namespace);
+                    + " for namespace <{}>", namespace);
             registerPropertyInternal(namespace, property);
         }
     }
@@ -170,7 +170,7 @@ public final class ClusterConcurrentFlowRuleManager {
                 PROPERTY_MAP.remove(namespace);
             }
             RecordLog.info("[ClusterFlowRuleManager] Removing property from cluster flow rule manager"
-                + " for namespace <{}>", namespace);
+                    + " for namespace <{}>", namespace);
         }
     }
 
@@ -243,7 +243,7 @@ public final class ClusterConcurrentFlowRuleManager {
      * Load flow rules for a specific namespace. The former rules of the namespace will be replaced.
      *
      * @param namespace a valid namespace
-     * @param rules rule list
+     * @param rules     rule list
      */
     public static void loadRules(String namespace, List<ConcurrentFlowRule> rules) {
         AssertUtil.notEmpty(namespace, "namespace cannot be empty");
@@ -344,7 +344,7 @@ public final class ClusterConcurrentFlowRuleManager {
 
             // Prepare cluster metric from valid flow ID.
             ClusterMetricStatistics.putMetricIfAbsent(flowId,
-                new ClusterMetric(clusterConfig.getSampleCount(), clusterConfig.getWindowIntervalMs()));
+                    new ClusterMetric(clusterConfig.getSampleCount(), clusterConfig.getWindowIntervalMs()));
         }
 
         // Cleanup unused cluster metrics.
@@ -371,16 +371,17 @@ public final class ClusterConcurrentFlowRuleManager {
         public synchronized void configUpdate(List<ConcurrentFlowRule> conf) {
             applyClusterFlowRule(conf, namespace);
             RecordLog.info("[ClusterFlowRuleManager] Cluster flow rules received for namespace <{}>: {}",
-                namespace, CONCURRENT_FLOW_RULES);
+                    namespace, CONCURRENT_FLOW_RULES);
         }
 
         @Override
         public synchronized void configLoad(List<ConcurrentFlowRule> conf) {
             applyClusterFlowRule(conf, namespace);
             RecordLog.info("[ClusterFlowRuleManager] Cluster flow rules loaded for namespace <{}>: {}",
-                namespace, CONCURRENT_FLOW_RULES);
+                    namespace, CONCURRENT_FLOW_RULES);
         }
     }
 
-    private ClusterConcurrentFlowRuleManager() {}
+    private ClusterConcurrentFlowRuleManager() {
+    }
 }

@@ -68,6 +68,8 @@ public abstract class Entry implements AutoCloseable {
 
     protected final ResourceWrapper resourceWrapper;
 
+    private long tokenId;
+
     public Entry(ResourceWrapper resourceWrapper) {
         this.resourceWrapper = resourceWrapper;
         this.createTimestamp = TimeUtil.currentTimeMillis();
@@ -178,4 +180,11 @@ public abstract class Entry implements AutoCloseable {
         this.originNode = originNode;
     }
 
+    public long getTokenId() {
+        return tokenId;
+    }
+
+    public void setTokenId(long tokenId) {
+        this.tokenId = tokenId;
+    }
 }

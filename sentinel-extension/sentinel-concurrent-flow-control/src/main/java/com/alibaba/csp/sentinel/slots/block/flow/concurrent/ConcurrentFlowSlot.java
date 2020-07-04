@@ -20,9 +20,6 @@ import com.alibaba.csp.sentinel.node.DefaultNode;
 import com.alibaba.csp.sentinel.slotchain.AbstractLinkedProcessorSlot;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
-import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
-import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleChecker;
-import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
 import com.alibaba.csp.sentinel.spi.SpiOrder;
 import com.alibaba.csp.sentinel.util.AssertUtil;
 import com.alibaba.csp.sentinel.util.function.Function;
@@ -31,16 +28,20 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @Author: yunfeiyanggzq
+ * @Date: 2020/7/3 17:33
+ */
 @SpiOrder(-2500)
 public class ConcurrentFlowSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
 
-    private final FlowRuleChecker checker;
+    private final ConcurrentFlowRuleChecker checker;
 
     public ConcurrentFlowSlot() {
-        this(new FlowRuleChecker());
+        this(new ConcurrentFlowRuleChecker());
     }
 
-    ConcurrentFlowSlot(FlowRuleChecker checker) {
+    ConcurrentFlowSlot(ConcurrentFlowRuleChecker checker) {
         AssertUtil.notNull(checker, "flow checker should not be null");
         this.checker = checker;
     }
@@ -48,31 +49,27 @@ public class ConcurrentFlowSlot extends AbstractLinkedProcessorSlot<DefaultNode>
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count,
                       boolean prioritized, Object... args) throws Throwable {
-        System.out.println("进入了并发流控slot");
         checkFlow(resourceWrapper, context, node, count, prioritized);
-
         fireEntry(context, resourceWrapper, node, count, prioritized, args);
     }
 
     void checkFlow(ResourceWrapper resource, Context context, DefaultNode node, int count, boolean prioritized)
-        throws BlockException {
-        System.out.println("进入了并发流控slot");
+            throws BlockException {
         checker.checkFlow(ruleProvider, resource, context, node, count, prioritized);
     }
 
     @Override
     public void exit(Context context, ResourceWrapper resourceWrapper, int count, Object... args) {
-        System.out.println("进入了并发流控slot");
+        checker.releaseFlow(context, resourceWrapper, count);
         fireExit(context, resourceWrapper, count, args);
     }
 
-    private final Function<String, Collection<FlowRule>> ruleProvider = new Function<String, Collection<FlowRule>>() {
+    private final Function<String, Collection<ConcurrentFlowRule>> ruleProvider = new Function<String, Collection<ConcurrentFlowRule>>() {
         @Override
-        public Collection<FlowRule> apply(String resource) {
+        public Collection<ConcurrentFlowRule> apply(String resource) {
             // Flow rule map should not be null.
-//            Map<String, List<FlowRule>> flowRules = FlowRuleManager.getFlowRuleMap();
-//            return flowRules.get(resource);
-            return null;
+            Map<String, List<ConcurrentFlowRule>> flowRules = ConcurrentFlowRuleManager.getFlowRuleMap();
+            return flowRules.get(resource);
         }
     };
 }

@@ -1,6 +1,6 @@
 package com.alibaba.csp.sentinel.cluster.flow.statistic.expire;
 
-import com.alibaba.csp.sentinel.cluster.flow.rule.ConcurrentFlowRuleManager;
+import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterConcurrentFlowRuleManager;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.NowCallsManager;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.TokenCacheNode;
 import com.alibaba.csp.sentinel.util.AssertUtil;
@@ -68,7 +68,7 @@ public class RegularExpireStrategy implements ExpireStrategy {
                         }
                         AtomicInteger nowCalls = NowCallsManager.get(node.getFlowId());
                         nowCalls.getAndAdd((int) node.getAcquireCount() * -1);
-                        ConcurrentFlowRuleManager.getFlowRule(node.getFlowId()).addExpireCount(node.getAcquireCount());
+                        ClusterConcurrentFlowRuleManager.getFlowRuleById(node.getFlowId()).addExpireCount(node.getAcquireCount());
                     }
                 }
                 // time out execution exit

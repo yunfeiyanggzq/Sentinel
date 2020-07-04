@@ -43,6 +43,7 @@ public class DefaultClusterClientInitFunc implements InitFunc {
     private void initDefaultEntityWriters() {
         RequestDataWriterRegistry.addWriter(ClientConstants.TYPE_PING, new PingRequestDataWriter());
         RequestDataWriterRegistry.addWriter(ClientConstants.TYPE_FLOW, new FlowRequestDataWriter());
+        RequestDataWriterRegistry.addWriter(ClientConstants.TYPE_CONCURRENT_FLOW, new FlowRequestDataWriter());
         Integer maxParamByteSize = ClusterClientStartUpConfig.getMaxParamByteSize();
         if (maxParamByteSize == null) {
             RequestDataWriterRegistry.addWriter(ClientConstants.TYPE_PARAM_FLOW, new ParamFlowRequestDataWriter());

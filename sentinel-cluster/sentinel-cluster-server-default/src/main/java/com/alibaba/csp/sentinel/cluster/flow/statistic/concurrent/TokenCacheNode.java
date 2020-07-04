@@ -1,5 +1,7 @@
 package com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent;
 
+import com.alibaba.csp.sentinel.slots.block.flow.concurrent.ConcurrentFlowRule;
+
 import java.util.UUID;
 
 /**
@@ -38,7 +40,7 @@ public class TokenCacheNode {
         TokenCacheNode node = new TokenCacheNode();
         long tokenId = UUID.randomUUID().getMostSignificantBits();
         node.setTokenId(tokenId);
-        node.setFlowId(rule.getFlowId());
+        node.setFlowId(rule.getClusterConfig().getFlowId());
         node.setClientTimeout(rule.getClientTimeout());
         node.getSourceTimeout(rule.getSourceTimeout());
         node.setAcquireCount(acquireCount);

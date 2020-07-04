@@ -2,13 +2,15 @@ package com.alibaba.csp.sentinel.cluster.flow;
 
 import com.alibaba.csp.sentinel.cluster.TokenResult;
 import com.alibaba.csp.sentinel.cluster.TokenResultStatus;
-import com.alibaba.csp.sentinel.cluster.flow.rule.ConcurrentFlowRuleManager;
-import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.ConcurrentFlowRule;
+import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterConcurrentFlowRuleManager;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.NowCallsManager;
+import com.alibaba.csp.sentinel.slots.block.flow.ClusterFlowConfig;
+import com.alibaba.csp.sentinel.slots.block.flow.concurrent.ConcurrentFlowRule;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,9 +24,15 @@ public class ClusterConcurrentFlowCheckerTest {
         rule = new ConcurrentFlowRule();
         rule.setClientTimeout(500L);
         rule.setSourceTimeout(100L);
-        rule.setConcurrencyLevel(3000);
-        rule.setFlowId(111L);
-        ConcurrentFlowRuleManager.addFlowRule(111L, rule);
+        rule.setConcurrencyLevel(1000);
+        rule.setClusterConfig(new ClusterFlowConfig());
+        rule.getClusterConfig().setFlowId(111L);
+        rule.setClusterMode(true);
+        ArrayList<ConcurrentFlowRule> rules = new ArrayList<>();
+        rules.add(rule);
+        ClusterConcurrentFlowRuleManager.registerPropertyIfAbsent("1-name");
+        ClusterConcurrentFlowRuleManager.loadRules("1-name", rules);
+        NowCallsManager.put(111L, 0);
     }
 
     @Test

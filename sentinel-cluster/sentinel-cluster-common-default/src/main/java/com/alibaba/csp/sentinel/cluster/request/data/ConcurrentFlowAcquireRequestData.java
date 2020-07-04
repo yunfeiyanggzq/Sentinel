@@ -6,7 +6,9 @@ package com.alibaba.csp.sentinel.cluster.request.data;
  */
 public class ConcurrentFlowAcquireRequestData {
     private long flowId;
+
     private int count;
+
     private boolean priority;
 
     public long getFlowId() {

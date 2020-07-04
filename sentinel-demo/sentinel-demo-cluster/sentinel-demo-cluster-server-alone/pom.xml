@@ -14,10 +14,6 @@
     <dependencies>
         <dependency>
             <groupId>com.alibaba.csp</groupId>
-            <artifactId>sentinel-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba.csp</groupId>
             <artifactId>sentinel-transport-simple-http</artifactId>
         </dependency>
         <dependency>
@@ -28,6 +24,11 @@
         <dependency>
             <groupId>com.alibaba.csp</groupId>
             <artifactId>sentinel-cluster-server-default</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-concurrent-flow-control</artifactId>
             <version>${project.version}</version>
         </dependency>
 
