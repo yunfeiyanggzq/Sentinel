@@ -55,7 +55,6 @@ import com.alibaba.csp.sentinel.slots.nodeselector.NodeSelectorSlot;
  * @see NodeSelectorSlot
  */
 public class Context {
-
     /**
      * Context name.
      */

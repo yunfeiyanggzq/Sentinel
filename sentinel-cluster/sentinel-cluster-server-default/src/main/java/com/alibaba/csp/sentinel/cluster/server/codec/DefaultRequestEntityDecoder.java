@@ -43,7 +43,6 @@ public class DefaultRequestEntityDecoder implements RequestEntityDecoder<ByteBuf
         if (source.readableBytes() >= 5) {
             int xid = source.readInt();
             int type = source.readByte();
-
             EntityDecoder<ByteBuf, ?> dataDecoder = RequestDataDecodeRegistry.getDecoder(type);
             if (dataDecoder == null) {
                 RecordLog.warn("Unknown type of request data decoder: {}", type);

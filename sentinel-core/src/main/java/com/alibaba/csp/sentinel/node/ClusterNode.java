@@ -15,14 +15,14 @@
  */
 package com.alibaba.csp.sentinel.node;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
-
 import com.alibaba.csp.sentinel.ResourceTypeConstants;
 import com.alibaba.csp.sentinel.context.ContextUtil;
-import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.util.AssertUtil;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * <p>
@@ -46,6 +46,8 @@ public class ClusterNode extends StatisticNode {
 
     private final String name;
     private final int resourceType;
+
+    private AtomicInteger concurrency = new AtomicInteger(0);
 
     public ClusterNode(String name) {
         this(name, ResourceTypeConstants.COMMON);
@@ -123,4 +125,24 @@ public class ClusterNode extends StatisticNode {
         return originCountMap;
     }
 
+    public void addConcurrency(int acquireCount) {
+//        System.out.println("改变clusterNode数量|"+this.getName()+"|"+acquireCount+"|"+this.getConcurrency());
+        concurrency.getAndAdd(acquireCount);
+    }
+
+    public int getConcurrency() {
+        return concurrency.get();
+    }
+
+    public boolean tryConcurrentPass(int acquireCount,int concurrencyLevel){
+        if (this.concurrency.get() + acquireCount <= concurrencyLevel) {
+            synchronized (this) {
+                if (this.concurrency.get() + acquireCount <= concurrencyLevel) {
+                    this.addConcurrency(acquireCount);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

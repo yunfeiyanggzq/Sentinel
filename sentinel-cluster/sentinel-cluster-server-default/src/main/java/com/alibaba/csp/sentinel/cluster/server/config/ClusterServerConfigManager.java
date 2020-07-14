@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.alibaba.csp.sentinel.cluster.ClusterConstants;
+import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterConcurrentFlowRuleManager;
 import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterFlowRuleManager;
 import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterParamFlowRuleManager;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.ClusterMetricStatistics;
@@ -243,6 +244,7 @@ public final class ClusterServerConfigManager {
                 if (!newSet.contains(ns)) {
                     ClusterFlowRuleManager.removeProperty(ns);
                     ClusterParamFlowRuleManager.removeProperty(ns);
+                    ClusterConcurrentFlowRuleManager.removeProperty(ns);
                 }
             }
         }
@@ -252,6 +254,7 @@ public final class ClusterServerConfigManager {
             // Register the rule property if needed.
             ClusterFlowRuleManager.registerPropertyIfAbsent(ns);
             ClusterParamFlowRuleManager.registerPropertyIfAbsent(ns);
+            ClusterConcurrentFlowRuleManager.registerPropertyIfAbsent(ns);
             // Initialize the global QPS limiter for the namespace.
             GlobalRequestLimiter.initIfAbsent(ns);
         }

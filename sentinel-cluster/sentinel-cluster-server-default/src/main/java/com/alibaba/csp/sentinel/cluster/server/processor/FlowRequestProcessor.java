@@ -24,6 +24,7 @@ import com.alibaba.csp.sentinel.cluster.request.data.FlowRequestData;
 import com.alibaba.csp.sentinel.cluster.response.ClusterResponse;
 import com.alibaba.csp.sentinel.cluster.response.data.FlowTokenResponseData;
 import com.alibaba.csp.sentinel.cluster.server.TokenServiceProvider;
+import io.netty.channel.ChannelHandlerContext;
 
 /**
  * @author Eric Zhao
@@ -33,9 +34,8 @@ import com.alibaba.csp.sentinel.cluster.server.TokenServiceProvider;
 public class FlowRequestProcessor implements RequestProcessor<FlowRequestData, FlowTokenResponseData> {
 
     @Override
-    public ClusterResponse<FlowTokenResponseData> processRequest(ClusterRequest<FlowRequestData> request) {
+    public ClusterResponse<FlowTokenResponseData> processRequest(ChannelHandlerContext ctx,ClusterRequest<FlowRequestData> request) {
         TokenService tokenService = TokenServiceProvider.getService();
-
         long flowId = request.getData().getFlowId();
         int count = request.getData().getCount();
         boolean prioritized = request.getData().isPriority();

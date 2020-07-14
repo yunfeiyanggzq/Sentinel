@@ -63,20 +63,18 @@ public class TokenServerHandler extends ChannelInboundHandlerAdapter {
         globalConnectionPool.refreshLastReadTime(ctx.channel());
         if (msg instanceof ClusterRequest) {
             ClusterRequest request = (ClusterRequest)msg;
-
             // Client ping with its namespace, add to connection manager.
             if (request.getType() == ClusterConstants.MSG_TYPE_PING) {
                 handlePingRequest(ctx, request);
                 return;
             }
-
             // Pick request processor for request type.
             RequestProcessor<?, ?> processor = RequestProcessorProvider.getProcessor(request.getType());
             if (processor == null) {
                 RecordLog.warn("[TokenServerHandler] No processor for request type: " + request.getType());
                 writeBadResponse(ctx, request);
             } else {
-                ClusterResponse<?> response = processor.processRequest(request);
+                ClusterResponse<?> response = processor.processRequest(ctx, request);
                 writeResponse(ctx, response);
             }
         }

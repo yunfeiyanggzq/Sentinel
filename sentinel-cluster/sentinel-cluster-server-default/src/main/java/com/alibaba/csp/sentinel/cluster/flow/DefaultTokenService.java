@@ -15,15 +15,17 @@
  */
 package com.alibaba.csp.sentinel.cluster.flow;
 
-import java.util.Collection;
-
-import com.alibaba.csp.sentinel.cluster.TokenResultStatus;
 import com.alibaba.csp.sentinel.cluster.TokenResult;
+import com.alibaba.csp.sentinel.cluster.TokenResultStatus;
 import com.alibaba.csp.sentinel.cluster.TokenService;
+import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterConcurrentFlowRuleManager;
 import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterFlowRuleManager;
 import com.alibaba.csp.sentinel.cluster.flow.rule.ClusterParamFlowRuleManager;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
+import com.alibaba.csp.sentinel.slots.block.flow.concurrent.ConcurrentFlowRule;
 import com.alibaba.csp.sentinel.slots.block.flow.param.ParamFlowRule;
+
+import java.util.Collection;
 
 /**
  * Default implementation for cluster {@link TokenService}.
@@ -59,6 +61,30 @@ public class DefaultTokenService implements TokenService {
         }
 
         return ClusterParamFlowChecker.acquireClusterToken(rule, acquireCount, params);
+    }
+
+    @Override
+    public TokenResult acquireConcurrentToken(String clientAddress, Long ruleId, int acquireCount, boolean prioritized) {
+        if (notValidRequest(ruleId, acquireCount)) {
+            return badRequest();
+        }
+        // The rule should be valid.
+        ConcurrentFlowRule rule = ClusterConcurrentFlowRuleManager.getFlowRuleById(ruleId);
+        if (rule == null) {
+            return new TokenResult(TokenResultStatus.NO_RULE_EXISTS);
+        }
+
+        return ClusterConcurrentFlowChecker.acquireClusterToken(clientAddress,rule, acquireCount, prioritized);
+    }
+
+    @Override
+    public TokenResult releaseConcurrentToken(Long tokenId) {
+        return ClusterConcurrentFlowChecker.releaseClusterToken(tokenId);
+    }
+
+    @Override
+    public TokenResult keepConcurrentToken(Long tokenId) {
+        return ClusterConcurrentFlowChecker.keepClusterToken(tokenId);
     }
 
     private boolean notValidRequest(Long id, int count) {
