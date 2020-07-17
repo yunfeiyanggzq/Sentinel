@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.alibaba.csp.sentinel.cluster.flow.statistic.ClusterMetricStatistics;
+import com.alibaba.csp.sentinel.cluster.flow.statistic.concurrent.CurrentConcurrencyManager;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.metric.ClusterMetric;
 import com.alibaba.csp.sentinel.cluster.server.ServerConstants;
 import com.alibaba.csp.sentinel.cluster.server.config.ClusterServerConfigManager;
@@ -351,6 +352,9 @@ public final class ClusterFlowRuleManager {
             ruleMap.put(flowId, rule);
             FLOW_NAMESPACE_MAP.put(flowId, namespace);
             flowIdSet.add(flowId);
+            if(!CurrentConcurrencyManager.containsFlowId(flowId)){
+                CurrentConcurrencyManager.put(flowId,0);
+            }
 
             // Prepare cluster metric from valid flow ID.
             ClusterMetricStatistics.putMetricIfAbsent(flowId,

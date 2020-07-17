@@ -43,10 +43,70 @@ public class ClusterFlowConfig {
     private int strategy = ClusterRuleConstant.FLOW_CLUSTER_STRATEGY_NORMAL;
 
     private int sampleCount = ClusterRuleConstant.DEFAULT_CLUSTER_SAMPLE_COUNT;
+
     /**
      * The time interval length of the statistic sliding window (in milliseconds)
      */
     private int windowIntervalMs = RuleConstant.DEFAULT_WINDOW_INTERVAL_MS;
+
+    /**
+     * if the client acquire a token and hold this token more than resourceTimeout.
+     * we will mark this resource is called timeout.
+     */
+    private long resourceTimeout = 2000;
+
+    /**
+     * the strategy when resource is called timeout,
+     * 0: do nothing
+     * 1: release the token acquired
+     */
+    private int resourceTimeoutStrategy = RuleConstant.DEFAULT_RESOURCE_TIMEOUT_STRATEGY;
+
+    /**
+     * the strategy when token client receive a block token result.
+     * 0: do nothing and block this flow.
+     * 1: acquire again after sleep a moment.
+     * 2: acquire token until get a token.
+     */
+    private int acquireRefuseStrategy = RuleConstant.DEFAULT_BLOCK_STRATEGY;
+
+    /**
+     * if a token client is offline,the token hold by this client will be delete by token server
+     * after clientOfflineTime
+     */
+    private long clientOfflineTime = 2000;
+
+    public int getAcquireRefuseStrategy() {
+        return acquireRefuseStrategy;
+    }
+
+    public void setAcquireRefuseStrategy(int acquireRefuseStrategy) {
+        this.acquireRefuseStrategy = acquireRefuseStrategy;
+    }
+
+    public int getResourceTimeoutStrategy() {
+        return resourceTimeoutStrategy;
+    }
+
+    public void setResourceTimeoutStrategy(int resourceTimeoutStrategy) {
+        this.resourceTimeoutStrategy = resourceTimeoutStrategy;
+    }
+
+    public long getResourceTimeout() {
+        return resourceTimeout;
+    }
+
+    public void setResourceTimeout(long resourceTimeout) {
+        this.resourceTimeout = resourceTimeout;
+    }
+
+    public long getClientOfflineTime() {
+        return clientOfflineTime;
+    }
+
+    public void setClientOfflineTime(long clientOfflineTime) {
+        this.clientOfflineTime = clientOfflineTime;
+    }
 
     public Long getFlowId() {
         return flowId;
@@ -104,16 +164,30 @@ public class ClusterFlowConfig {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) { return true; }
-        if (o == null || getClass() != o.getClass()) { return false; }
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
-        ClusterFlowConfig that = (ClusterFlowConfig)o;
+        ClusterFlowConfig that = (ClusterFlowConfig) o;
 
-        if (thresholdType != that.thresholdType) { return false; }
-        if (fallbackToLocalWhenFail != that.fallbackToLocalWhenFail) { return false; }
-        if (strategy != that.strategy) { return false; }
-        if (sampleCount != that.sampleCount) { return false; }
-        if (windowIntervalMs != that.windowIntervalMs) { return false; }
+        if (thresholdType != that.thresholdType) {
+            return false;
+        }
+        if (fallbackToLocalWhenFail != that.fallbackToLocalWhenFail) {
+            return false;
+        }
+        if (strategy != that.strategy) {
+            return false;
+        }
+        if (sampleCount != that.sampleCount) {
+            return false;
+        }
+        if (windowIntervalMs != that.windowIntervalMs) {
+            return false;
+        }
         return flowId != null ? flowId.equals(that.flowId) : that.flowId == null;
     }
 
@@ -131,12 +205,16 @@ public class ClusterFlowConfig {
     @Override
     public String toString() {
         return "ClusterFlowConfig{" +
-            "flowId=" + flowId +
-            ", thresholdType=" + thresholdType +
-            ", fallbackToLocalWhenFail=" + fallbackToLocalWhenFail +
-            ", strategy=" + strategy +
-            ", sampleCount=" + sampleCount +
-            ", windowIntervalMs=" + windowIntervalMs +
-            '}';
+                "flowId=" + flowId +
+                ", thresholdType=" + thresholdType +
+                ", fallbackToLocalWhenFail=" + fallbackToLocalWhenFail +
+                ", strategy=" + strategy +
+                ", sampleCount=" + sampleCount +
+                ", windowIntervalMs=" + windowIntervalMs +
+                ", resourceTimeout=" + resourceTimeout +
+                ", resourceTimeoutStrategy=" + resourceTimeoutStrategy +
+                ", acquireRefuseStrategy=" + acquireRefuseStrategy +
+                ", clientOfflineTime=" + clientOfflineTime +
+                '}';
     }
 }
