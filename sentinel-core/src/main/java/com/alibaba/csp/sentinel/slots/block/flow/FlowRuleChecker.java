@@ -15,14 +15,13 @@
  */
 package com.alibaba.csp.sentinel.slots.block.flow;
 
-import java.util.Collection;
-
+import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.cluster.ClusterStateManager;
-import com.alibaba.csp.sentinel.cluster.server.EmbeddedClusterTokenServerProvider;
-import com.alibaba.csp.sentinel.cluster.client.TokenClientProvider;
-import com.alibaba.csp.sentinel.cluster.TokenResultStatus;
 import com.alibaba.csp.sentinel.cluster.TokenResult;
+import com.alibaba.csp.sentinel.cluster.TokenResultStatus;
 import com.alibaba.csp.sentinel.cluster.TokenService;
+import com.alibaba.csp.sentinel.cluster.client.TokenClientProvider;
+import com.alibaba.csp.sentinel.cluster.server.EmbeddedClusterTokenServerProvider;
 import com.alibaba.csp.sentinel.context.Context;
 import com.alibaba.csp.sentinel.log.RecordLog;
 import com.alibaba.csp.sentinel.node.DefaultNode;
@@ -30,9 +29,19 @@ import com.alibaba.csp.sentinel.node.Node;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
+import com.alibaba.csp.sentinel.slots.block.flow.timeout.ReSourceTimeoutStrategy;
+import com.alibaba.csp.sentinel.slots.block.flow.timeout.ReSourceTimeoutStrategyUtil;
+import com.alibaba.csp.sentinel.slots.block.flow.timeout.TimerHolder;
 import com.alibaba.csp.sentinel.slots.clusterbuilder.ClusterBuilderSlot;
+import com.alibaba.csp.sentinel.util.HostNameUtil;
 import com.alibaba.csp.sentinel.util.StringUtil;
 import com.alibaba.csp.sentinel.util.function.Function;
+import io.netty.util.Timeout;
+import io.netty.util.TimerTask;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Rule checker for flow control rules.
@@ -56,13 +65,37 @@ public class FlowRuleChecker {
         }
     }
 
+    public void releaseFlowToken(Context context) {
+        if (context.getCurEntry() == null) {
+            return;
+        }
+
+        HashMap<Long, Timeout> tokenInfoMap = context.getCurEntry().getTokenInfoMap();
+        if (tokenInfoMap == null) {
+            return;
+        }
+        for (Long tokenId : tokenInfoMap.keySet()) {
+            Timeout timeout = tokenInfoMap.get(tokenId);
+            if (timeout == null) {
+                releaseToken(tokenId);
+                continue;
+            }
+            if (timeout.isCancelled() || timeout.isExpired()) {
+                continue;
+            }
+            releaseToken(tokenId);
+            timeout.cancel();
+        }
+    }
+
+
     public boolean canPassCheck(/*@NonNull*/ FlowRule rule, Context context, DefaultNode node,
-                                                    int acquireCount) {
+                                             int acquireCount) {
         return canPassCheck(rule, context, node, acquireCount, false);
     }
 
     public boolean canPassCheck(/*@NonNull*/ FlowRule rule, Context context, DefaultNode node, int acquireCount,
-                                                    boolean prioritized) {
+                                             boolean prioritized) {
         String limitApp = rule.getLimitApp();
         if (limitApp == null) {
             return true;
@@ -83,6 +116,20 @@ public class FlowRuleChecker {
         }
 
         return rule.getRater().canPass(selectedNode, acquireCount, prioritized);
+    }
+
+    private static void releaseToken(long tokenId) {
+        TokenService clusterService = pickClusterService();
+        if (clusterService == null) {
+            return;
+        }
+
+        TokenResult result = clusterService.releaseConcurrentToken(tokenId);
+        if (result.getStatus() != TokenResultStatus.RELEASE_OK) {
+            RecordLog.warn("[FlowRuleChecker] release cluster token unexpected failed", result.getStatus());
+            return;
+        }
+
     }
 
     static Node selectReferenceNode(FlowRule rule, Context context, DefaultNode node) {
@@ -133,7 +180,7 @@ public class FlowRuleChecker {
 
             return selectReferenceNode(rule, context, node);
         } else if (RuleConstant.LIMIT_APP_OTHER.equals(limitApp)
-            && FlowRuleManager.isOtherOrigin(origin, rule.getResource())) {
+                && FlowRuleManager.isOtherOrigin(origin, rule.getResource())) {
             if (strategy == RuleConstant.STRATEGY_DIRECT) {
                 return context.getOriginNode();
             }
@@ -144,15 +191,14 @@ public class FlowRuleChecker {
         return null;
     }
 
-    private static boolean passClusterCheck(FlowRule rule, Context context, DefaultNode node, int acquireCount,
+    public static boolean passClusterCheck(FlowRule rule, Context context, DefaultNode node, int acquireCount,
                                             boolean prioritized) {
         try {
             TokenService clusterService = pickClusterService();
             if (clusterService == null) {
                 return fallbackToLocalOrPass(rule, context, node, acquireCount, prioritized);
             }
-            long flowId = rule.getClusterConfig().getFlowId();
-            TokenResult result = clusterService.requestToken(flowId, acquireCount, prioritized);
+            TokenResult result = requestToken(clusterService, rule, context, node, acquireCount, prioritized);
             return applyTokenResult(result, rule, context, node, acquireCount, prioritized);
             // If client is absent, then fallback to local mode.
         } catch (Throwable ex) {
@@ -161,6 +207,23 @@ public class FlowRuleChecker {
         // Fallback to local flow control when token client or server for this rule is not available.
         // If fallback is not enabled, then directly pass.
         return fallbackToLocalOrPass(rule, context, node, acquireCount, prioritized);
+    }
+
+    private static TokenResult requestToken(TokenService clusterService, FlowRule rule, Context context, DefaultNode node, int acquireCount, boolean prioritized) {
+        int grade = rule.getGrade();
+        long flowId = rule.getClusterConfig().getFlowId();
+        if (grade == RuleConstant.FLOW_GRADE_THREAD) {
+            String address = null;
+            if (ClusterStateManager.isServer()) {
+                address = HostNameUtil.getIp();
+            }
+            return clusterService.requestConcurrentToken(address, flowId, acquireCount);
+        } else if (grade == RuleConstant.FLOW_GRADE_QPS) {
+            return clusterService.requestToken(flowId, acquireCount, prioritized);
+        } else {
+            RecordLog.warn("[FlowRuleChecker] Request cluster token unexpected grade,just pass", grade);
+            return new TokenResult(TokenResultStatus.OK);
+        }
     }
 
     private static boolean fallbackToLocalOrPass(FlowRule rule, Context context, DefaultNode node, int acquireCount,
@@ -173,7 +236,7 @@ public class FlowRuleChecker {
         }
     }
 
-    private static TokenService pickClusterService() {
+    public static TokenService pickClusterService() {
         if (ClusterStateManager.isClient()) {
             return TokenClientProvider.getClient();
         }
@@ -188,6 +251,10 @@ public class FlowRuleChecker {
                                                          int acquireCount, boolean prioritized) {
         switch (result.getStatus()) {
             case TokenResultStatus.OK:
+                // Store the tokenId and start a resource timeout timer if the resource timeout strategy isn't default.
+                if (rule.getGrade() == RuleConstant.FLOW_GRADE_THREAD) {
+                    setEntry(rule, context, result.getTokenId());
+                }
                 return true;
             case TokenResultStatus.SHOULD_WAIT:
                 // Wait for next tick.
@@ -203,8 +270,29 @@ public class FlowRuleChecker {
             case TokenResultStatus.TOO_MANY_REQUEST:
                 return fallbackToLocalOrPass(rule, context, node, acquireCount, prioritized);
             case TokenResultStatus.BLOCKED:
+                if (context.getCurEntry().isTryAgain()) {
+                    return ConcurrentFlowBlockStrategy.canPass(rule, context, node, acquireCount, prioritized);
+                }
             default:
                 return false;
         }
+    }
+
+    private static void setEntry(final FlowRule rule, final Context context, final long tokenId) {
+        final Entry entry = context.getCurEntry();
+        if (entry.getTokenInfoMap() == null) {
+            entry.setTokenInfoMap(new HashMap<Long, Timeout>());
+        }
+        Timeout timeout = null;
+        if (rule.getClusterConfig().getResourceTimeoutStrategy() != RuleConstant.DEFAULT_RESOURCE_TIMEOUT_STRATEGY) {
+            timeout = TimerHolder.getTimer().newTimeout(new TimerTask() {
+                @Override
+                public void run(Timeout timeout) {
+                    ReSourceTimeoutStrategy strategy = ReSourceTimeoutStrategyUtil.getTimeoutStrategy(rule.getClusterConfig().getResourceTimeoutStrategy());
+                    strategy.doWithSourceTimeout(tokenId, timeout);
+                }
+            }, rule.getClusterConfig().getResourceTimeout(), TimeUnit.MILLISECONDS);
+        }
+        entry.getTokenInfoMap().put(tokenId, timeout);
     }
 }

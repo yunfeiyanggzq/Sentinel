@@ -21,6 +21,11 @@ import com.alibaba.csp.sentinel.context.ContextUtil;
 import com.alibaba.csp.sentinel.node.Node;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.context.Context;
+import io.netty.util.Timeout;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Each {@link SphU}#entry() will return an {@link Entry}. This class holds information of current invocation:<br/>
@@ -65,6 +70,31 @@ public abstract class Entry implements AutoCloseable {
 
     private Throwable error;
     private BlockException blockError;
+
+
+    private HashMap<Long,Timeout> tokenInfoMap;
+
+    private boolean tryAgain=true;
+
+    public boolean isTryAgain() {
+        return tryAgain;
+    }
+
+    public void setTryAgain(boolean tryAgain) {
+        this.tryAgain = tryAgain;
+    }
+
+    public HashMap<Long, Timeout> getTokenInfoMap() {
+        return tokenInfoMap;
+    }
+
+    public void setTokenInfoMap(HashMap<Long, Timeout> tokenInfoMap) {
+        this.tokenInfoMap = tokenInfoMap;
+    }
+
+    public void addTokenInfo(long tokenId,Timeout timeout) {
+        this.tokenInfoMap.put(tokenId,timeout);
+    }
 
     protected final ResourceWrapper resourceWrapper;
 
