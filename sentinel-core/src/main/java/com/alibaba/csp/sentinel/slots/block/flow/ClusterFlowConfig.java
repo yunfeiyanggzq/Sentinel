@@ -18,6 +18,8 @@ package com.alibaba.csp.sentinel.slots.block.flow;
 import com.alibaba.csp.sentinel.slots.block.ClusterRuleConstant;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 
+import java.util.Objects;
+
 /**
  * Flow rule config in cluster mode.
  *
@@ -47,6 +49,46 @@ public class ClusterFlowConfig {
      * The time interval length of the statistic sliding window (in milliseconds)
      */
     private int windowIntervalMs = RuleConstant.DEFAULT_WINDOW_INTERVAL_MS;
+
+    private long resourceTimeout = 3000;
+
+    private int resourceTimeoutStrategy = RuleConstant.DEFAULT_RESOURCE_TIMEOUT_STRATEGY;
+
+    private int acquireRefuseStrategy = RuleConstant.DEFAULT_BLOCK_STRATEGY;
+
+    private long clientOfflineTime = 3000;
+
+    public long getResourceTimeout() {
+        return resourceTimeout;
+    }
+
+    public void setResourceTimeout(long resourceTimeout) {
+        this.resourceTimeout = resourceTimeout;
+    }
+
+    public int getResourceTimeoutStrategy() {
+        return resourceTimeoutStrategy;
+    }
+
+    public void setResourceTimeoutStrategy(int resourceTimeoutStrategy) {
+        this.resourceTimeoutStrategy = resourceTimeoutStrategy;
+    }
+
+    public int getAcquireRefuseStrategy() {
+        return acquireRefuseStrategy;
+    }
+
+    public void setAcquireRefuseStrategy(int acquireRefuseStrategy) {
+        this.acquireRefuseStrategy = acquireRefuseStrategy;
+    }
+
+    public long getClientOfflineTime() {
+        return clientOfflineTime;
+    }
+
+    public void setClientOfflineTime(long clientOfflineTime) {
+        this.clientOfflineTime = clientOfflineTime;
+    }
 
     public Long getFlowId() {
         return flowId;
@@ -114,7 +156,11 @@ public class ClusterFlowConfig {
         if (strategy != that.strategy) { return false; }
         if (sampleCount != that.sampleCount) { return false; }
         if (windowIntervalMs != that.windowIntervalMs) { return false; }
-        return flowId != null ? flowId.equals(that.flowId) : that.flowId == null;
+        if (resourceTimeout != that.resourceTimeout) { return false; }
+        if (clientOfflineTime != that.clientOfflineTime) { return false; }
+        if (resourceTimeoutStrategy != that.resourceTimeoutStrategy) { return false; }
+        if (acquireRefuseStrategy != that.acquireRefuseStrategy) { return false; }
+        return Objects.equals(flowId, that.flowId);
     }
 
     @Override
@@ -125,18 +171,26 @@ public class ClusterFlowConfig {
         result = 31 * result + strategy;
         result = 31 * result + sampleCount;
         result = 31 * result + windowIntervalMs;
+        result = (int) (31 * result + resourceTimeout);
+        result = (int) (31 * result + clientOfflineTime);
+        result = 31 * result + resourceTimeoutStrategy;
+        result = 31 * result + acquireRefuseStrategy;
         return result;
     }
 
     @Override
     public String toString() {
         return "ClusterFlowConfig{" +
-            "flowId=" + flowId +
-            ", thresholdType=" + thresholdType +
-            ", fallbackToLocalWhenFail=" + fallbackToLocalWhenFail +
-            ", strategy=" + strategy +
-            ", sampleCount=" + sampleCount +
-            ", windowIntervalMs=" + windowIntervalMs +
-            '}';
+                "flowId=" + flowId +
+                ", thresholdType=" + thresholdType +
+                ", fallbackToLocalWhenFail=" + fallbackToLocalWhenFail +
+                ", strategy=" + strategy +
+                ", sampleCount=" + sampleCount +
+                ", windowIntervalMs=" + windowIntervalMs +
+                ", resourceTimeout=" + resourceTimeout +
+                ", resourceTimeoutStrategy=" + resourceTimeoutStrategy +
+                ", acquireRefuseStrategy=" + acquireRefuseStrategy +
+                ", clientOfflineTime=" + clientOfflineTime +
+                '}';
     }
 }

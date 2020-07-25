@@ -15,12 +15,15 @@
  */
 package com.alibaba.csp.sentinel.demo.cluster;
 
-import java.util.Collections;
-
+import com.alibaba.csp.sentinel.Entry;
+import com.alibaba.csp.sentinel.SphU;
+import com.alibaba.csp.sentinel.cluster.ClusterStateManager;
 import com.alibaba.csp.sentinel.cluster.server.ClusterTokenServer;
 import com.alibaba.csp.sentinel.cluster.server.SentinelDefaultTokenServer;
-import com.alibaba.csp.sentinel.cluster.server.config.ClusterServerConfigManager;
-import com.alibaba.csp.sentinel.cluster.server.config.ServerTransportConfig;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * <p>Cluster server demo (alone mode).</p>
@@ -35,16 +38,34 @@ public class ClusterServerDemo {
     public static void main(String[] args) throws Exception {
         // Not embedded mode by default (alone mode).
         ClusterTokenServer tokenServer = new SentinelDefaultTokenServer();
+        ClusterStateManager.setToServer();
 
-        // A sample for manually load config for cluster server.
-        // It's recommended to use dynamic data source to cluster manage config and rules.
-        // See the sample in DemoClusterServerInitFunc for detail.
-        ClusterServerConfigManager.loadGlobalTransportConfig(new ServerTransportConfig()
-            .setIdleSeconds(600)
-            .setPort(11111));
-        ClusterServerConfigManager.loadServerNamespaceSet(Collections.singleton(DemoConstants.APP_NAME));
-
-        // Start the server.
-        tokenServer.start();
+        final CountDownLatch countDownLatch = new CountDownLatch(10000);
+        ExecutorService pool = Executors.newFixedThreadPool(1000);
+        for (int i=0;i<10000;i++) {
+            Runnable task = new Runnable() {
+                @Override
+                public void run() {
+                    Entry entry = null;
+                    try {
+                        entry = SphU.entry("cluster-resource");
+                        System.out.println("pass");
+                    } catch (Exception ex) {
+                        System.out.println("block");
+                    } finally {
+                        if (entry != null) {
+                            entry.exit();
+                        }
+                        countDownLatch.countDown();
+                    }
+                }
+            };
+            pool.execute(task);
+        }
+        countDownLatch.await();
+        pool.shutdown();
     }
 }
+
+//java -Dserver.port=8080 -Dcsp.sentinel.dashboard.server=localhost:8080 -Dproject.name=sentinel-dashboard -jar sentinel-dashboard-1.7.2.jar
+//curl http://localhost:8719/cluster/server/flowRules
